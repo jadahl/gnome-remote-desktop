@@ -64,6 +64,9 @@ grd_stream_get_object_path (GrdStream *stream)
 {
   GrdStreamPrivate *priv = grd_stream_get_instance_private (stream);
 
+  if (!priv->proxy)
+    return NULL;
+
   return g_dbus_proxy_get_object_path (G_DBUS_PROXY (priv->proxy));
 }
 
@@ -107,13 +110,31 @@ grd_stream_new (uint32_t                       stream_id,
   return stream;
 }
 
+void
+grd_stream_destroy (GrdStream *stream)
+{
+  g_object_run_dispose (G_OBJECT (stream));
+  g_object_unref (stream);
+}
+
+static void
+grd_stream_dispose (GObject *object)
+{
+  GrdStream *stream = GRD_STREAM (object);
+  GrdStreamPrivate *priv = grd_stream_get_instance_private (stream);
+
+  g_clear_object (&priv->proxy);
+
+  G_OBJECT_CLASS (grd_stream_parent_class)->finalize (object);
+}
+
 static void
 grd_stream_finalize (GObject *object)
 {
   GrdStream *stream = GRD_STREAM (object);
   GrdStreamPrivate *priv = grd_stream_get_instance_private (stream);
 
-  g_clear_object (&priv->proxy);
+  g_clear_pointer (&priv->mapping_id, g_free);
 
   G_OBJECT_CLASS (grd_stream_parent_class)->finalize (object);
 }
@@ -128,6 +149,7 @@ grd_stream_class_init (GrdStreamClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  object_class->dispose = grd_stream_dispose;
   object_class->finalize = grd_stream_finalize;
 
   signals[READY] = g_signal_new ("ready",
