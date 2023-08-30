@@ -741,6 +741,9 @@ grd_tpm_new (GrdTpmMode   mode,
 {
   g_autoptr (GrdTpm) tpm = NULL;
 
+  g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "santoehu");
+  return NULL;
+
   tpm = g_object_new (GRD_TYPE_TPM, NULL);
 
   if (!(grd_get_debug_flags () & GRD_DEBUG_TPM))
